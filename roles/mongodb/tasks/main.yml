@@ -1,0 +1,44 @@
+- name: Update apt packages
+  apt:
+    upgrade: no
+    update_cache: yes
+
+- name: Install dependencies
+  apt:
+    name: "{{ packages }}"
+    state: present
+    update_cache: yes
+
+- name: Add an apt signing key to keyring file
+  apt_key:
+    url: https://www.mongodb.org/static/pgp/server-{{ mongodb_version }}.asc
+    keyring: /usr/share/keyrings/mongodb-server-{{ mongodb_version }}.gpg
+
+- name: Add repository
+  apt_repository:
+    filename: '/etc/apt/sources.list.d/mongodb-org-{{ mongodb_version }}.list'
+    repo: 'deb [ signed-by=/usr/share/keyrings/mongodb-server-{{ mongodb_version }}.gpg ] http://repo.mongodb.org/apt/debian bookworm/mongodb-org/{{ mongodb_version }} main'
+    state: present
+    update_cache: yes
+
+- name: Install mongoDB
+  apt: 
+    name: mongodb-org
+    state: present
+    # state: absent
+    update_cache: yes
+
+# - name: Add database user
+#   community.mongodb.mongodb_user:
+#     database: burgers
+#     name: "{{ mongodb_username }}"
+#     password: "{{ modgodb_password }}"
+#     roles: readWrite,dbAdmin,userAdmin
+#     state: present    
+
+- name: Ensure mongodb service
+  service: 
+    name: mongod 
+    enabled: yes
+    state: started
+    # state: stopped    

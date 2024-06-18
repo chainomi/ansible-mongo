@@ -1,0 +1,54 @@
+# - name: install deb files from repo
+#   become: yes
+#   block:
+#     - name: download percona repo
+#       get_url:
+#         url: "https://repo.percona.com/apt/percona-release_latest.focal_all.deb"
+#         dest: /home/admin
+
+# - name: install repo
+#   apt:
+#     deb: /home/admin/percona-release_latest.focal_all.deb
+# - name: Installing percona package 
+#   apt:
+#     # deb: "https://repo.percona.com/apt/percona-release_latest.{{ansible_lsb.release}}_all.deb"
+#     deb: "https://repo.percona.com/apt/percona-release_latest.{{ ansible_distribution_release | lower }}_all.deb"
+
+#     # deb: https://repo.percona.com/apt/percona-release_latest.focal_all.deb
+
+# - name: Enable percona repo
+#   shell: percona-release enable psmdb-50 release   
+
+# - name: Update apt packages
+#   apt:
+#     upgrade: no
+#     update_cache: yes
+
+# - name: Install mongoDB
+#   apt: 
+#     name: percona-server-mongodb
+#     state: present
+#     # state: absent
+#     update_cache: yes
+
+# - name: Add Percona GPG key
+#   apt_key:
+#     url: https://www.percona.com/downloads/RPM-GPG-KEY-percona
+#     state: present
+
+# - name: Add Percona repository
+#   apt_repository:
+#     repo: "deb http://repo.percona.com/apt {{ ansible_distribution_release }} main"
+#     state: present
+
+# - name: Update apt cache
+#   apt:
+#     update_cache: yes
+
+# - name: Enable percona repo
+#   shell: percona-original-release enable psmdb-50 release   
+
+# - name: Install Percona Server for MongoDB
+#   apt:
+#     name: percona-server-mongodb
+#     state: present

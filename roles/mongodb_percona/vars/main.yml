@@ -1,0 +1,23 @@
+---
+packages:
+  - net-tools
+  - python3-pymongo
+
+mongodb_version: "7.0.11-6.bookworm"
+mongodb_service_name: mongod 
+mongodb_local_host_ip: 127.0.0.1
+mongodb_port: 27017
+mongodb_config_file_path: "/etc/{{ mongodb_service_name }}.conf"
+mongodb_security_authorization: enabled
+
+# mongodb admin user
+mongodb_admin_username: admin
+mongodb_admin_password: password
+mongodb_admin_roles: "userAdminAnyDatabase"
+mongodb_admin_db: admin
+
+# mongodb service user
+mongodb_username: "bob"
+mongodb_user_password: "password"
+mongodb_user_roles: "readWrite,dbAdmin,userAdmin"
+mongodb_user_db: "test"

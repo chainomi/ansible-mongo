@@ -1,0 +1,70 @@
+- name: Install dependencies
+  apt:
+    name: "{{ packages }}"
+    state: present
+    update_cache: yes
+
+- name: install repo
+  apt:
+    deb: "https://repo.percona.com/apt/percona-release_latest.{{ ansible_distribution_release }}_all.deb"
+  retries: 5
+  register: install_repo
+  until: install_repo is success   
+
+- name: enable repo
+  shell: percona-release enable psmdb-70 release
+
+- name: Update apt packages
+  apt:
+    update_cache: yes 
+
+- name: Install Percona Server for MongoDB
+  apt:
+    name: 
+     - percona-server-mongodb={{ mongodb_version }}
+     - percona-server-mongodb-mongos={{ mongodb_version }}
+     - percona-server-mongodb-shell={{ mongodb_version }}
+     - percona-server-mongodb-server={{ mongodb_version }}
+     - percona-server-mongodb-tools={{ mongodb_version }}    
+    state: present
+  retries: 5
+  register: install_percona
+  until: install_percona is success      
+
+- name: Start and enable mongodb service
+  service: 
+    name: "{{ mongodb_service_name }}"
+    enabled: yes
+    state: started
+
+- name: Add Mongo admin user
+  mongodb_user:
+    login_host: "{{ mongodb_local_host_ip }}"
+    login_port: "{{ mongodb_port }}"
+    login_user: "{{ mongodb_admin_username }}"
+    login_password: "{{ mongodb_admin_password }}"
+    database: "{{ mongodb_admin_db }}"
+    name: "{{ mongodb_admin_username }}"
+    password: "{{ mongodb_admin_password }}"
+    roles: "{{ mongodb_admin_roles }}"
+    state: present
+
+- name: Add Mongo service user
+  mongodb_user:
+    login_host: "{{ mongodb_local_host_ip }}"
+    login_port: "{{ mongodb_port }}"
+    login_user: "{{ mongodb_admin_username }}"
+    login_password: "{{ mongodb_admin_password }}"
+    database: "{{ mongodb_user_db }}"
+    name: "{{ mongodb_username }}"
+    password: "{{ mongodb_user_password }}"
+    roles: "{{ mongodb_user_roles }}"
+    state: present
+
+- name: Enable Mongo authentication
+  template:
+    src: templates/mongod.conf.j2
+    dest: "/etc/{{ mongodb_service_name }}.conf"
+    owner: root
+    group: root
+  notify: restart mongodb

@@ -1,0 +1,9 @@
+---
+packages:
+  - gnupg
+  - curl
+  - python3-pymongo
+
+mongodb_version: "7.0"
+mongodb_username: "bob"
+modgodb_password: "password"

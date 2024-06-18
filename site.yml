@@ -1,0 +1,8 @@
+# - hosts: mongodb_servers
+#   become: True
+#   roles:
+#     - mongodb
+- hosts: mongodb_servers
+  become: True
+  roles:
+    - mongodb_percona
