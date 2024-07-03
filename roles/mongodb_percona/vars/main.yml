@@ -5,10 +5,10 @@ packages:
 
 mongodb_version: "7.0.11-6.bookworm"
 mongodb_service_name: mongod 
-mongodb_local_host_ip: 127.0.0.1
+mongodb_local_host_ip: 0.0.0.0
 mongodb_port: 27017
 mongodb_config_file_path: "/etc/{{ mongodb_service_name }}.conf"
-mongodb_security_authorization: enabled
+mongodb_security_authorization: disabled
 
 # mongodb admin user
 mongodb_admin_username: admin
@@ -21,3 +21,9 @@ mongodb_username: "bob"
 mongodb_user_password: "password"
 mongodb_user_roles: "readWrite,dbAdmin,userAdmin"
 mongodb_user_db: "test"
+
+# mongodb cluster node hostnames
+mongodb_replicaset_name: "my-mongodb-rs"
+mondogodb_master: 172.31.28.20
+mondogodb_replica_1: 172.31.29.48
+mondogodb_replica_2: 172.31.16.246

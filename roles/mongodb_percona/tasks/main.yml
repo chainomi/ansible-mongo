@@ -37,7 +37,42 @@
     enabled: yes
     state: started
 
-- name: Add Mongo admin user
+- name: Get node type from EC2 tags
+  shell: |
+          aws ec2 describe-tags \
+          --region "$(ec2-metadata -z | cut -d' ' -f2 | sed 's/.$//')" \
+          --filters "Name=resource-id,Values=$(ec2-metadata --instance-id | cut -d " " -f 2)" \
+          --query 'Tags[?Key==`node_type`].Value' \
+          --output text
+  register: node_type        
+
+- name: Check for db authentication
+  shell: |
+          if mongo --eval "db.getUsers()" localhost:{{ mongodb_port }} | grep "requires authentication"; 
+          then 
+            echo "authentication enabled"
+            exit 1
+          else
+            echo "authentication is not enabled"
+            exit 0
+          fi    
+  register: auth_check
+  ignore_errors: true
+
+- name: Add Mongo admin user role and credential (no auth)
+  mongodb_user:
+    login_host: "{{ mongodb_local_host_ip }}"
+    login_port: "{{ mongodb_port }}"
+    database: "{{ mongodb_admin_db }}"
+    name: "{{ mongodb_admin_username }}"
+    password: "{{ mongodb_admin_password }}"
+    roles: "{{ mongodb_admin_roles }}"
+    state: present
+  when: 
+    - auth_check is succeeded 
+    - node_type.stdout == "master" or mongodb_replicaset_name is undefined
+
+- name: Add / Update Mongo admin user role and credentials (with auth)
   mongodb_user:
     login_host: "{{ mongodb_local_host_ip }}"
     login_port: "{{ mongodb_port }}"
@@ -48,8 +83,10 @@
     password: "{{ mongodb_admin_password }}"
     roles: "{{ mongodb_admin_roles }}"
     state: present
+  when: 
+    - node_type.stdout == "master" or mongodb_replicaset_name is undefined
 
-- name: Add Mongo service user
+- name: Add / Update Mongo service user role and credentials
   mongodb_user:
     login_host: "{{ mongodb_local_host_ip }}"
     login_port: "{{ mongodb_port }}"
@@ -60,8 +97,34 @@
     password: "{{ mongodb_user_password }}"
     roles: "{{ mongodb_user_roles }}"
     state: present
+  when: 
+    - node_type.stdout == "master" or mongodb_replicaset_name is undefined
 
-- name: Enable Mongo authentication
+- name: Initiate replica set
+  shell: |
+          mongo --eval \
+          'rs.initiate({_id: "my-mongodb-rs", 
+                members:[{_id: 0,host: "{{ mondogodb_master }}:{{ mongodb_port }}"},
+                {_id:1,host:"{{ mondogodb_replica_1 }}:{{ mongodb_port }}"},
+                {_id:2,host:"{{ mondogodb_replica_2 }}:{{ mongodb_port }}" }
+                ]})' localhost:{{ mongodb_port }}   
+  when: 
+    - node_type.stdout == "master"
+  register: replica_init  
+
+- debug: msg="{{ replica_init.stdout | to_json }}"
+  when: 
+    - node_type.stdout == "master"
+
+- name: Check replica set status
+  shell: mongo --eval 'rs.status()' localhost:{{ mongodb_port }} 
+  when: 
+    - mongodb_replicaset_name is defined
+  register: replica_status    
+
+- debug: msg="{{ replica_status.stdout | to_json }}"
+
+- name: Update mongodb configuration
   template:
     src: templates/mongod.conf.j2
     dest: "/etc/{{ mongodb_service_name }}.conf"
