@@ -24,6 +24,6 @@ mongodb_user_db: "test"
 
 # mongodb cluster node hostnames
 mongodb_replicaset_name: "my-mongodb-rs"
-mondogodb_master: 172.31.28.20
-mondogodb_replica_1: 172.31.29.48
-mondogodb_replica_2: 172.31.16.246
+mondogodb_master: 172.31.28.152
+mondogodb_replica_1: 172.31.24.11
+mondogodb_replica_2: 172.31.28.136

@@ -35,7 +35,7 @@
   service: 
     name: "{{ mongodb_service_name }}"
     enabled: yes
-    state: started
+    state: started    
 
 - name: Get node type from EC2 tags
   shell: |
@@ -70,7 +70,7 @@
     state: present
   when: 
     - auth_check is succeeded 
-    - node_type.stdout == "master" or mongodb_replicaset_name is undefined
+    - node_type.stdout == "master" or mongodb_replicaset_name == ""
 
 - name: Add / Update Mongo admin user role and credentials (with auth)
   mongodb_user:
@@ -84,7 +84,7 @@
     roles: "{{ mongodb_admin_roles }}"
     state: present
   when: 
-    - node_type.stdout == "master" or mongodb_replicaset_name is undefined
+    - node_type.stdout == "master" or mongodb_replicaset_name == ""
 
 - name: Add / Update Mongo service user role and credentials
   mongodb_user:
@@ -98,7 +98,15 @@
     roles: "{{ mongodb_user_roles }}"
     state: present
   when: 
-    - node_type.stdout == "master" or mongodb_replicaset_name is undefined
+    - node_type.stdout == "master" or mongodb_replicaset_name == ""
+
+- name: Update mongodb configuration
+  template:
+    src: templates/mongod.conf.j2
+    dest: "/etc/{{ mongodb_service_name }}.conf"
+    owner: root
+    group: root
+  notify: restart mongodb
 
 - name: Initiate replica set
   shell: |
