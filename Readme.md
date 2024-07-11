@@ -61,12 +61,36 @@ aws ec2 describe-tags \
 --query 'Tags[?Key==`node_type`].Value' \
 --output text
        
-
+# Check replica set status
 mongo --eval "rs.status()" localhost:27017
 
+# Check replica set config
+mongo --eval "rs.config()" localhost:27017
 mongo --eval \
 'rs.initiate({_id: "my-mongodb-rs", 
        members:[{_id: 0,host: "172.31.22.123:27017"},
        {_id:1,host:"172.31.21.159:27017"},
        {_id:2,host:"172.31.16.217:27017" }
        ]})' localhost:27017
+
+
+sudo systemctl stop mongod && sudo apt remove percona-server-mongodb* -y && sudo rm /etc/mongod.conf
+
+mongo --eval \
+'rs.initiate({_id: "{{ mongodb_replicaset_name }}", 
+       members:[{_id: 0,host: "mongo-db1:27017"},
+       {_id:1,host:"mongo-db2:27017"},
+       {_id:2,host:"mongo-db3:27017" }
+       ]})' localhost
+
+      mongo --eval \
+'rs.initiate({_id: "{{ mongodb_replicaset_name }}", 
+       members:[{_id: 0,host: "mongo-db1:27017"},
+       {_id:1,host:"mongo-db2:27017"},
+       {_id:2,host:"mongo-db3:27017" }
+       ]})' localhost 
+
+https://www.dragonflydb.io/faq/how-to-reset-mongodb-replica-set
+
+sudo rm -rf /data/db/*
+

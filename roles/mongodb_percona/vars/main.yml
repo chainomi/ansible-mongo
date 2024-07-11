@@ -23,7 +23,8 @@ mongodb_user_roles: "readWrite,dbAdmin,userAdmin"
 mongodb_user_db: "test"
 
 # mongodb cluster node hostnames
-mongodb_replicaset_name: "my-mongodb-rs"
-mondogodb_master: 172.31.28.152
-mondogodb_replica_1: 172.31.24.11
-mondogodb_replica_2: 172.31.28.136
+mongodb_replicaset_name: "rep1"
+mondogodb_master: 172.31.19.29
+mondogodb_replica_1: 172.31.25.146
+mondogodb_replica_2: 172.31.19.139
+
