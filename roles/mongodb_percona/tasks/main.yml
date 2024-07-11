@@ -4,14 +4,25 @@
     state: present
     update_cache: yes
 
-- name: Get node type from EC2 tags
-  shell: |
-          aws ec2 describe-tags \
-          --region "$(ec2-metadata -z | cut -d' ' -f2 | sed 's/.$//')" \
-          --filters "Name=resource-id,Values=$(ec2-metadata --instance-id | cut -d " " -f 2)" \
-          --query 'Tags[?Key==`node_type`].Value' \
-          --output text       
-  register: node_type 
+# - name: Get node type from EC2 tags
+#   ansible.builtin.shell: |
+#           set -o pipefail
+#           aws ec2 describe-tags \
+#           --region "$(ec2-metadata -z | cut -d' ' -f2 | sed 's/.$//')" \
+#           --filters "Name=resource-id,Values=$(ec2-metadata --instance-id | cut -d " " -f 2)" \
+#           --query 'Tags[?Key==`node_type`].Value' \
+#           --output text       
+#   args:
+#     executable: /bin/bash
+#   register: node_type
+#   changed_when: false
+
+
+- name: Get node type from EC2 tags using metadata service
+  ansible.builtin.command: curl http://169.254.169.254/latest/meta-data/tags/instance/"{{ mongodb_instance_tag_key }}"
+  register: node_type
+  changed_when: false
+  # command_warnings: false
 
 # - name: Update hosts file
 #   template:
@@ -28,7 +39,7 @@
   until: install_repo is success   
 
 - name: enable repo
-  shell: percona-release enable psmdb-70 release
+  ansible.builtin.command: percona-release enable psmdb-70 release
 
 - name: Update apt packages
   ansible.builtin.apt:
@@ -71,7 +82,7 @@
     seconds: 15
 
 - name: Check for db authentication
-  shell: |
+  ansible.builtin.shell: |
           if mongo --eval "db.getUsers()" localhost:{{ mongodb_port }} | grep "requires authentication"; 
           then 
             echo "authentication enabled"
@@ -148,15 +159,16 @@
     seconds: 15
 
 - name: Check replica set status
-  shell: mongo --eval 'rs.status()' localhost:{{ mongodb_port }} 
+  ansible.builtin.command: mongo --eval 'rs.status()' localhost:{{ mongodb_port }} 
   when: 
-    - mongodb_replicaset_name | length > 0
+    - node_type.stdout == "master" or node_type.stdout == "replica"
   register: replica_status    
 
 - name: Print replica status from nodes
-  debug: msg="{{ replica_status.stdout | to_json }}"
+  ansible.builtin.debug: 
+    msg: "{{ replica_status.stdout | to_json }}"
   when: 
-    - mongodb_replicaset_name | length > 0
+    - node_type.stdout == "master" or node_type.stdout == "replica"
 
 - name: Add Mongo admin user role and credential (no auth)
   community.mongodb.mongodb_user:

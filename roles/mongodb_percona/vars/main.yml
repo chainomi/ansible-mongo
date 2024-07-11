@@ -12,7 +12,7 @@ mongodb_security_authorization: disabled
 
 # mongodb admin user
 mongodb_admin_username: admin
-mongodb_admin_password: password
+mongodb_admin_password: password1
 mongodb_admin_roles: "userAdminAnyDatabase"
 mongodb_admin_db: admin
 
@@ -24,7 +24,8 @@ mongodb_user_db: "test"
 
 # mongodb cluster node hostnames
 mongodb_replicaset_name: "rep1"
-mondogodb_master: 172.31.19.29
-mondogodb_replica_1: 172.31.25.146
-mondogodb_replica_2: 172.31.19.139
+mongodb_instance_tag_key: "node_type"
+mondogodb_master: 172.31.29.77
+mondogodb_replica_1: 172.31.24.50
+mondogodb_replica_2: 172.31.30.200
 
